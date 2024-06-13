@@ -6,7 +6,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm, SearchForm
 from flask_ckeditor import CKEditor
-
+from werkzeug.utils import secure_filename
+import uuid as uuid
+import os
 
 # Create a Flask Instance
 app = Flask(__name__)
@@ -19,6 +21,9 @@ ckeditor = CKEditor(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql+pymysql://root:roger891016@localhost/our_users'
 # Secret Key
 app.config['SECRET_KEY'] = "confidential"
+UPLOAD_FOLDER = 'static/images'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 # Initialize The Database
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -38,6 +43,18 @@ def load_user(user_id):
 def base():
     form = SearchForm()
     return dict(form=form)
+
+# Create Admin Page
+@app.route('/admin')
+@login_required
+def admin():
+    id = current_user.id
+    if id == 18:
+        return render_template('admin.html')
+    else:
+        flash("Sorry, You cannot access the Admin page. Please contact the Administrator!")
+        return redirect(url_for('dashboard'))
+ 
 
 # Create Search Function
 @app.route('/search', methods=["POST"]) # Just Post, cuz we don't want to create a page users can go to
@@ -94,11 +111,24 @@ def dashboard():
         name_to_update.email = request.form['email'] 
         name_to_update.favorite_color = request.form['favorite_color']
         name_to_update.username = request.form['username'] 
+        name_to_update.about_author = request.form['about_author'] 
+        name_to_update.profile_pic = request.files['profile_pic'] 
+        
+        # Grab Image Name
+        pic_filename = secure_filename(name_to_update.profile_pic.filename)
+        
+        # Set UUID
+        pic_name = str(uuid.uuid1()) + '_' + pic_filename # uuid: Rand Number
+        
+        # Save Image
+        name_to_update.profile_pic.save(os.path.join(app.config['UPLOAD_FOLDER'], pic_name))
+        # Change it to a string to save to db
+        name_to_update.profile_pic = pic_name
         try:
             db.session.commit()
             flash("User Updated Successfully!")
             return render_template("dashboard.html",
-                                   form=form,
+                                   form=form, 
                                    name_to_update=name_to_update)
         except:
             flash("Error! Looks like there was a problem... Try Again!")
@@ -257,6 +287,7 @@ def update(id):
         name_to_update.name = request.form['name'] # different from validator
         name_to_update.email = request.form['email'] 
         name_to_update.favorite_color = request.form['favorite_color']
+        name_to_update.about_author = request.form['about_author']
         name_to_update.username = request.form['username'] 
         try:
             db.session.commit()
@@ -285,7 +316,7 @@ def add_user():
             # Hash the password!!!
             hashed_pw = generate_password_hash(form.password_hash.data, method='pbkdf2:sha256')
             
-            user = Users(username=form.username.data, name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data, password_hash=hashed_pw)
+            user = Users(username=form.username.data, name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data, about_author=form.about_author, password_hash=hashed_pw)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
@@ -293,6 +324,7 @@ def add_user():
         form.username.data = ''
         form.email.data = ''
         form.favorite_color.data = ''
+        form.about_author = ''
         form.password_hash.data = ''
         flash("User Added Successfully!")
     our_users = Users.query.order_by(Users.date_added)
@@ -399,7 +431,9 @@ class Users(db.Model, UserMixin):
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     favorite_color = db.Column(db.String(120))
+    about_author = db.Column(db.Text(500), nullable=True)
     date_added = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    profile_pic = db.Column(db.String(1000), nullable=True) # Not saving the picture, but storing its name; hence, we use String
     
     #Users Can Have Many Posts
     posts = db.relationship('Posts', backref='poster') # Reference the Posts class

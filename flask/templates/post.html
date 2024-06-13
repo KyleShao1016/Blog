@@ -16,6 +16,9 @@
     <small>By: {{ post.poster.name }}<br/>
     {{ post.date_posted }}</small><br/><br/>
     {{ post.content | safe }}
+    {% if post.poster.about_author %}
+        {{post.poster.about_author}}
+    {% endif %}
     <br/>
     <br/>
 </div>

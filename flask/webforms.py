@@ -1,9 +1,10 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError, TextAreaField
 from wtforms.validators import DataRequired # If someone doesn't enter anything and click the Submit button -> use this to pop up some messages
 from wtforms.validators import EqualTo, Length
 from wtforms.widgets import TextArea
 from flask_ckeditor import CKEditorField
+from flask_wtf.file import FileField
 
 # Create A Search Form
 class SearchForm(FlaskForm):
@@ -33,9 +34,10 @@ class UserForm(FlaskForm):
     username = StringField("Username", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired()])
     favorite_color = StringField("Favorite Color") # We don't care whether the users enter their fav. color, hence, we don't need the validator
+    about_author = TextAreaField("About Author")
     password_hash = PasswordField("Password", validators=[DataRequired(), EqualTo('password_hash2', message="Password Must Match!")])
     password_hash2 = PasswordField("Confirm Password", validators=[DataRequired()])
-    
+    profile_pic = FileField("Profile Pic")
     submit = SubmitField("Submit")
     
 

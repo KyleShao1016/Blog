@@ -4,3 +4,4 @@ bin/
 lib/
 flask_backup/
 pyvenv.cfg
+include/
