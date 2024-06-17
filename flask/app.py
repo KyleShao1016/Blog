@@ -358,10 +358,10 @@ def index():
                            stuff=stuff,
                            fruits=fruits)
 
-# localhost:5000/user/john
-@app.route('/user/<name>')
-def user(name):
-    return render_template("user.html", user_name=name)
+# # localhost:5000/user/john
+# @app.route('/user/<name>')
+# def user(name):
+#     return render_template("user.html", user_name=name)
 
 # Create Custom Error Pages
 # Invalid URL
