@@ -18,7 +18,7 @@ ckeditor = CKEditor(app)
 # Old SQLite DB
 # app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///users.db'
 
-app.config["SQLALCHEMY_DATABASE_URI"] = 'postgres://sql1_cceh_user:1cKqFHsvGhkOtNuLLVN02mT7yXXU7f4O@dpg-cpnplfg8fa8c73b5f500-a.oregon-postgres.render.com/sql1_cceh'
+app.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://sql1_cceh_user:1cKqFHsvGhkOtNuLLVN02mT7yXXU7f4O@dpg-cpnplfg8fa8c73b5f500-a.oregon-postgres.render.com/sql1_cceh'
 
 # New MySQL DB
 # app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql+pymysql://root:roger891016@localhost/our_users'
@@ -324,7 +324,7 @@ def add_user():
             # Hash the password!!!
             hashed_pw = generate_password_hash(form.password_hash.data, method='pbkdf2:sha256')
             
-            user = Users(username=form.username.data, name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data, about_author=form.about_author, password_hash=hashed_pw)
+            user = Users(username=form.username.data, name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data, about_author=form.about_author.data, password_hash=hashed_pw)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
@@ -332,7 +332,7 @@ def add_user():
         form.username.data = ''
         form.email.data = ''
         form.favorite_color.data = ''
-        form.about_author = ''
+        form.about_author.data = ''
         form.password_hash.data = ''
         flash("User Added Successfully!")
     our_users = Users.query.order_by(Users.date_added)
@@ -440,7 +440,7 @@ class Users(db.Model, UserMixin):
     email = db.Column(db.String(120), nullable=False, unique=True)
     favorite_color = db.Column(db.String(120))
     # about_author = db.Column(db.Text(500), nullable=True)
-    about_author = db.Column(db.Text(), nullable=True) # For PostgreSQL
+    about_author = db.Column(db.Text, nullable=True) # For PostgreSQL
     date_added = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     profile_pic = db.Column(db.String(1000), nullable=True) # Not saving the picture, but storing its name; hence, we use String
     
@@ -465,7 +465,7 @@ class Users(db.Model, UserMixin):
     def __repr__(self):
         return "<Name %r>" % self.name
     
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        app.run(debug=True)
+# if __name__ == '__main__':
+#     with app.app_context():
+#         db.create_all()
+#         app.run(debug=True)
