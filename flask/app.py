@@ -17,8 +17,11 @@ ckeditor = CKEditor(app)
 # Add Database
 # Old SQLite DB
 # app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///users.db'
+
+app.config["SQLALCHEMY_DATABASE_URI"] = 'postgres://sql1_cceh_user:1cKqFHsvGhkOtNuLLVN02mT7yXXU7f4O@dpg-cpnplfg8fa8c73b5f500-a.oregon-postgres.render.com/sql1_cceh'
+
 # New MySQL DB
-app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql+pymysql://root:roger891016@localhost/our_users'
+# app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql+pymysql://root:roger891016@localhost/our_users'
 # Secret Key
 app.config['SECRET_KEY'] = "confidential"
 UPLOAD_FOLDER = 'static/images'
@@ -255,27 +258,32 @@ def get_current_date():
     return favorite_fruits
     
 @app.route('/delete/<int:id>')
+@login_required
 def delete(id):
-    user_to_delete = Users.query.get_or_404(id)
-    form = UserForm()
-    name = None
-    
-    try:
-        db.session.delete(user_to_delete)
-        db.session.commit()
-        flash("User Deleted Successfully!!")
+    if id == current_user.id:
+        user_to_delete = Users.query.get_or_404(id)
+        form = UserForm()
+        name = None
         
-        our_users = Users.query.order_by(Users.date_added)
-        return render_template("add_user.html",
-                            form=form,
-                            name=name,
-                            our_users=our_users)
-    except:
-        flash("Oops! There was a problem deleting user, try again.")
-        return render_template("add_user.html",
-                            form=form,
-                            name=name,
-                            our_users=our_users)
+        try:
+            db.session.delete(user_to_delete)
+            db.session.commit()
+            flash("User Deleted Successfully!!")
+            
+            our_users = Users.query.order_by(Users.date_added)
+            return render_template("add_user.html",
+                                form=form,
+                                name=name,
+                                our_users=our_users)
+        except:
+            flash("Oops! There was a problem deleting user, try again.")
+            return render_template("add_user.html",
+                                form=form,
+                                name=name,
+                                our_users=our_users)
+    else:
+        flash("Sorry, you can't delete that user!")
+        return redirect(url_for('dashboard'))
     
 # Update Database Record
 @app.route('/update/<int:id>', methods=['GET', 'POST'])
@@ -431,7 +439,8 @@ class Users(db.Model, UserMixin):
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     favorite_color = db.Column(db.String(120))
-    about_author = db.Column(db.Text(500), nullable=True)
+    # about_author = db.Column(db.Text(500), nullable=True)
+    about_author = db.Column(db.Text(), nullable=True) # For PostgreSQL
     date_added = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     profile_pic = db.Column(db.String(1000), nullable=True) # Not saving the picture, but storing its name; hence, we use String
     
